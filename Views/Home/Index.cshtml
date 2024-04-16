@@ -1,0 +1,147 @@
+﻿@model List<WeatherData>
+
+@{
+    ViewData["Title"] = "Main page";
+}
+
+<div class="text-center">
+    <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+        <div class="container-fluid">
+            <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                <ul class="navbar-nav flex-grow-1">
+                    <li class="nav-item">
+                        <a class="nav-link text-dark" href="/Home/Index?latitude=@Context.Request.Query["latitude"]&longitude=@Context.Request.Query["longitude"]&req=current">Current</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-dark" href="/Home/Index?latitude=@Context.Request.Query["latitude"]&longitude=@Context.Request.Query["longitude"]&req=forecast/h1">For a day</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-dark" href="/Home/Index?latitude=@Context.Request.Query["latitude"]&longitude=@Context.Request.Query["longitude"]&req=forecast/h6">For a weeak</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    @{
+        var quaryParams = Context.Request.Query;
+        if (quaryParams["req"] == "forecast/h1")
+        {
+            <h1 class="display-4"> For a day weather in @Model[0].City.Name</h1>
+        }
+        else if (quaryParams["req"] == "forecast/h6")
+        {
+            <h1 class="display-4"> For a weeak weather in @Model[0].City.Name</h1>
+        }
+        else
+        {
+            <h1 class="display-4"> Current Weather in @Model[0].City.Name</h1>
+        }
+
+    }
+    
+    <table class="table table-sm table-striped table-bordered m-2">
+        <thead>
+            <tr>
+                <th>Time</th>
+                <th>Air Temp</th>
+                <th>Comfort Temp</th>
+                <th>Water Temp</th>
+                <th>Pressure</th>
+                <th>Cloudiness</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            @{
+                foreach (var m in Model)
+                {
+                    if (Context.Request.Query["req"] == "current" || Context.Request.Query["req"].Count == 0)
+                    {
+                        <tr>
+                            <td>@m.Date.Local</td>
+                            <td>@m.Temperature.Air.c</td>
+                            <td>@m.Temperature.Comfort.c</td>
+                            <td>@m.Temperature.Water.c</td>
+                            <td>@m.Pressure.mm_hg_atm</td>
+                            <td>@m.Cloudiness.Percent %</td>
+                            <td>@m.Description</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        if(DateTime.Now.AddHours(-1) <= m.Date.Local)
+                    {
+                            if (Context.Request.Query["req"] == "forecast/h1")
+                            {
+                                if (m.Date.Local <= DateTime.Now.AddDays(1))
+                                {
+                                    <tr>
+                                        <td>@m.Date.Local</td>
+                                        <td>@m.Temperature.Air.c</td>
+                                        <td>@m.Temperature.Comfort.c</td>
+                                        <td>@m.Temperature.Water.c</td>
+                                        <td>@m.Pressure.mm_hg_atm</td>
+                                        <td>@m.Cloudiness.Percent %</td>
+                                        <td>@m.Description</td>
+                                    </tr>
+                                }
+                            }
+                            else if (Context.Request.Query["req"] == "forecast/h6")
+                            {
+                                if (m.Date.Local <= DateTime.Now.AddDays(7))
+                                {
+                                    <tr>
+                                        <td>@m.Date.Local</td>
+                                        <td>@m.Temperature.Air.c</td>
+                                        <td>@m.Temperature.Comfort.c</td>
+                                        <td>@m.Temperature.Water.c</td>
+                                        <td>@m.Pressure.mm_hg_atm</td>
+                                        <td>@m.Cloudiness.Percent %</td>
+                                        <td>@m.Description</td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td>@m.Date.Local</td>
+                                    <td>@m.Temperature.Air.c</td>
+                                    <td>@m.Temperature.Comfort.c</td>
+                                    <td>@m.Temperature.Water.c</td>
+                                    <td>@m.Pressure.mm_hg_atm</td>
+                                    <td>@m.Cloudiness.Percent %</td>
+                                    <td>@m.Description</td>
+                                </tr>
+                            }
+                        }
+                    }
+                }
+            }
+            
+            @* <tr>
+                <td>Город</td>
+                <td>Воздуха</td>
+                <td>Ощущается</td>
+                <td>Воды</td>
+                <td>Давление</td>
+                <td>Облачность</td>
+                <td>Осадки</td>
+            </tr> *@
+        </tbody>
+    </table>
+    
+    <form method="post" asp-controller="Home" asp-action="Export">
+        @for(int i = 0; i < Model.Count; i++)
+        {
+            @Html.HiddenFor(m => m[i].Date.Local)
+            @Html.HiddenFor(m => m[i].Temperature.Air.c)
+            @Html.HiddenFor(m => m[i].Temperature.Comfort.c)
+            @Html.HiddenFor(m => m[i].Temperature.Water.c)
+            @Html.HiddenFor(m => m[i].Pressure.mm_hg_atm)
+            @Html.HiddenFor(m => m[i].Cloudiness.Percent)
+            @Html.HiddenFor(m => m[i].Description)
+        }
+        @Html.Hidden("req", Context.Request.Query["req"])
+        <button type="submit">Export Exel</button>
+    </form>
+</div>
